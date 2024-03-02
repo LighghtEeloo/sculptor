@@ -10,3 +10,4 @@ macro_rules! submod {
 
 submod!(project_info);
 submod!(file_io);
+submod!(sha_snap);
