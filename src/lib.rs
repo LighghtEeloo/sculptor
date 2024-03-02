@@ -115,6 +115,20 @@ where
             }
         }
     }
+    pub fn edit(&self) -> io::Result<()> {
+        let editor = std::env::var("EDITOR")
+            .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "$EDITOR envvar not set"))?;
+        let status = std::process::Command::new(editor)
+            .arg(&self.path)
+            .status()?;
+        if !status.success() {
+            Err(io::Error::new(
+                io::ErrorKind::Other,
+                "failed to edit config file and exit gracefully",
+            ))?;
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
