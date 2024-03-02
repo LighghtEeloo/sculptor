@@ -1,8 +1,14 @@
 [package]
 name = "sculptor"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["LitiaEeloo <litiaeeloo@gmail.com>"]
+description = "(Placeholder of) an app framework that uses configuration files."
+readme = "Readme.md"
+homepage = "https://github.com/LighghtEeloo/sculptor"
+repository = "https://github.com/LighghtEeloo/sculptor"
+license = "MIT"
+keywords = ["cli", "configuration"]
+categories = ["command-line-utilities"]
 
 [dependencies]
