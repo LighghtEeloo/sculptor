@@ -1,6 +1,48 @@
+use directories::ProjectDirs;
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path::PathBuf};
 
+/// Implement this trait to get ProjectInfo, which provides directories for the project
+pub trait AppAuthor {
+    fn app_name() -> &'static str;
+    fn author() -> &'static str;
+}
+
+pub trait LazyProjectDirs {
+    fn lazy_project_dirs() -> Lazy<ProjectDirs>;
+}
+
+impl<T: AppAuthor> LazyProjectDirs for T {
+    fn lazy_project_dirs() -> Lazy<ProjectDirs> {
+        Lazy::new(|| {
+            ProjectDirs::from("", Self::author(), Self::app_name())
+                .expect("No valid config directory fomulated")
+        })
+    }
+}
+
+/// Provides directories for the project
+pub trait ProjectInfo: LazyProjectDirs {
+    fn project_dirs() -> ProjectDirs {
+        Self::lazy_project_dirs().to_owned()
+    }
+    fn config_dir() -> PathBuf {
+        Self::lazy_project_dirs().config_dir().to_path_buf()
+    }
+    fn data_dir() -> PathBuf {
+        Self::lazy_project_dirs().data_dir().to_path_buf()
+    }
+    fn cache_dir() -> PathBuf {
+        Self::lazy_project_dirs().cache_dir().to_path_buf()
+    }
+    fn state_dir() -> Option<PathBuf> {
+        Some(Self::lazy_project_dirs().state_dir()?.to_path_buf())
+    }
+}
+
+/// Easy access to the a file (configuration file, data file, etc.)
+/// Provides (safe?) load and save operations
 pub struct FileIO<T: Serialize + for<'de> Deserialize<'de>> {
     _phantom: std::marker::PhantomData<T>,
     pub path: PathBuf,
