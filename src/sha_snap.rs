@@ -8,3 +8,5 @@ pub trait ShaSnap: AsRef<[u8]> {
         format!("{:x}", result)
     }
 }
+
+impl<T: AsRef<[u8]>> ShaSnap for T {}
