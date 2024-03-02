@@ -40,6 +40,7 @@ pub trait ProjectInfo: LazyProjectDirs {
         Some(Self::lazy_project_dirs().state_dir()?.to_path_buf())
     }
 }
+impl<T: LazyProjectDirs> ProjectInfo for T {}
 
 /// Easy access to the a file (configuration file, data file, etc.)
 /// Provides (safe?) load and save operations
