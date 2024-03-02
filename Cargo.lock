@@ -386,7 +386,7 @@ checksum = "e86697c916019a8588c99b5fac3cead74ec0b4b819707a682fd4d23fa0ce1ba1"
 
 [[package]]
 name = "sculptor"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "directories",
  "env_logger",
