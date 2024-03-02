@@ -26,3 +26,6 @@ toml_edit = "0.22"
 # path management
 directories = "5.0"
 shellexpand = { version = "3.0", features = ["path"] }
+
+# time
+time = { version = "0.3", features = ["formatting"] }
