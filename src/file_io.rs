@@ -1,38 +1,43 @@
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path::PathBuf};
 
-pub trait SerdeStr<Proof>: Serialize + for<'de> Deserialize<'de> {
+pub trait SerdeStr: Serialize + for<'de> Deserialize<'de> {
     fn de_from_str(string: &str) -> Result<Self, io::Error>
     where
         Self: Sized;
     fn ser_to_string(&self) -> Result<String, io::Error>;
 }
 
-pub struct SerdeViaJson;
-
-impl<T> SerdeStr<SerdeViaJson> for T
-where
-    T: Serialize + for<'de> Deserialize<'de>,
-{
-    fn de_from_str(string: &str) -> Result<Self, io::Error> {
-        Ok(serde_json::from_str(string)?)
-    }
-    fn ser_to_string(&self) -> Result<String, io::Error> {
-        Ok(serde_json::to_string(self)?)
-    }
+#[macro_export]
+macro_rules! impl_serde_str_json {
+    ($($t:ty),*) => {
+        $(
+            impl $crate::SerdeStr for $t {
+                fn de_from_str(string: &str) -> Result<Self, std::io::Error> {
+                    Ok(serde_json::from_str(string)?)
+                }
+                fn ser_to_string(&self) -> Result<String, std::io::Error> {
+                    Ok(serde_json::to_string(self)?)
+                }
+            }
+        )*
+    };
 }
 
-pub struct SerdeViaToml;
-impl<T> SerdeStr<SerdeViaToml> for T
-where
-    T: Serialize + for<'de> Deserialize<'de>,
-{
-    fn de_from_str(string: &str) -> Result<Self, io::Error> {
-        Ok(toml::from_str(string).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?)
-    }
-    fn ser_to_string(&self) -> Result<String, io::Error> {
-        Ok(toml::to_string(self).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?)
-    }
+#[macro_export]
+macro_rules! impl_serde_str_toml {
+    ($($t:ty),*) => {
+        $(
+            impl $crate::SerdeStr for $t {
+                fn de_from_str(string: &str) -> Result<Self, std::io::Error> {
+                    Ok(toml::from_str(string).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?)
+                }
+                fn ser_to_string(&self) -> Result<String, std::io::Error> {
+                    Ok(toml::to_string(self).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?)
+                }
+            }
+        )*
+    };
 }
 
 /// Easy access to the a file (configuration file, data file, etc.)
@@ -43,9 +48,9 @@ pub struct FileIO<T, S = ()> {
     pub path: PathBuf,
 }
 
-impl<T, S> FileIO<T, S>
+impl<T> FileIO<T>
 where
-    T: SerdeStr<S>,
+    T: SerdeStr,
 {
     pub fn new(path: PathBuf) -> Self {
         Self {
@@ -64,7 +69,7 @@ where
         fs::create_dir_all(parent)?;
         Ok(())
     }
-    pub fn load_str(&self) -> io::Result<T> {
+    pub fn load(&self) -> io::Result<T> {
         self.ensure_parent()?;
         let string = fs::read_to_string(&self.path.canonicalize()?)?;
         let conf = SerdeStr::de_from_str(&string)?;
@@ -92,7 +97,7 @@ where
         Ok(())
     }
     pub fn load_or_init(&self, init: impl Fn() -> T) -> io::Result<T> {
-        match self.load_str() {
+        match self.load() {
             Ok(conf) => Ok(conf),
             Err(_) => {
                 let conf = init();
@@ -125,7 +130,7 @@ mod tests {
     struct Conf {
         pub name: String,
     }
-    impl SerdeStr<()> for Conf {
+    impl SerdeStr for Conf {
         fn de_from_str(string: &str) -> Result<Self, io::Error> {
             let json = serde_json::from_str(&string)?;
             Ok(json)
@@ -146,7 +151,7 @@ mod tests {
         let s = serde_json::to_string(&conf).unwrap();
         fs::write(&path, s).unwrap();
         let file_io = FileIO::<Conf>::new(path.clone());
-        let loaded_conf = file_io.load_str();
+        let loaded_conf = file_io.load();
         fs::remove_file(&path).unwrap();
         assert_eq!(loaded_conf.unwrap(), conf);
     }
@@ -159,7 +164,7 @@ mod tests {
         };
         let file_io = FileIO::<Conf>::new(path.clone());
         file_io.save(&conf).unwrap();
-        let loaded_conf = file_io.load_str();
+        let loaded_conf = file_io.load();
         fs::remove_file(&path).unwrap();
         assert_eq!(loaded_conf.unwrap(), conf);
     }
