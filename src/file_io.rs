@@ -140,7 +140,6 @@ mod tests {
             Ok(s)
         }
     }
-    // impl SerdeStr<SerdeViaToml> for Conf {}
 
     #[test]
     fn file_io_str() {

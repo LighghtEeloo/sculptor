@@ -8,8 +8,11 @@ macro_rules! submod {
     };
 }
 
+#[cfg(feature = "project_info")]
 submod!(project_info);
+#[cfg(feature = "file_io")]
 submod!(file_io);
+#[cfg(feature = "sha_snap")]
 submod!(sha_snap);
 
 // diff
