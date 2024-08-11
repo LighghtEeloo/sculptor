@@ -77,6 +77,22 @@ where
     }
     pub fn save(&self, conf: &T) -> io::Result<()> {
         self.ensure_parent()?;
+        let s = SerdeStr::ser_to_string(conf)?;
+        fs::write(&self.path, s)?;
+        Ok(())
+    }
+    pub fn load_or_init(&self, init: impl Fn() -> T) -> io::Result<T> {
+        match self.load() {
+            Ok(conf) => Ok(conf),
+            Err(_) => {
+                let conf = init();
+                self.save(&conf)?;
+                Ok(conf)
+            }
+        }
+    }
+    pub fn backup_and_save(&self, conf: &T) -> io::Result<()> {
+        self.ensure_parent()?;
         if self.path.exists() {
             // back up the old file
             let mut ext = self
@@ -92,19 +108,8 @@ where
             let backup_path = self.path.with_extension(ext);
             fs::rename(&self.path, &backup_path)?;
         }
-        let s = SerdeStr::ser_to_string(conf)?;
-        fs::write(&self.path, s)?;
+        self.save(conf)?;
         Ok(())
-    }
-    pub fn load_or_init(&self, init: impl Fn() -> T) -> io::Result<T> {
-        match self.load() {
-            Ok(conf) => Ok(conf),
-            Err(_) => {
-                let conf = init();
-                self.save(&conf)?;
-                Ok(conf)
-            }
-        }
     }
     pub fn edit(&self) -> io::Result<()> {
         let editor = std::env::var("EDITOR")
