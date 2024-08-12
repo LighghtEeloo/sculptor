@@ -86,7 +86,7 @@ where
             Ok(conf) => Ok(conf),
             Err(_) => {
                 let conf = init();
-                self.save(&conf)?;
+                self.backup_and_save(&conf)?;
                 Ok(conf)
             }
         }
