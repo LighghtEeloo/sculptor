@@ -118,8 +118,7 @@ where
             .arg(&self.path)
             .status()?;
         if !status.success() {
-            Err(io::Error::new(
-                io::ErrorKind::Other,
+            Err(io::Error::other(
                 "failed to edit config file and exit gracefully",
             ))?;
         }
@@ -137,7 +136,7 @@ mod tests {
     }
     impl SerdeStr for Conf {
         fn de_from_str(string: &str) -> Result<Self, io::Error> {
-            let json = serde_json::from_str(&string)?;
+            let json = serde_json::from_str(string)?;
             Ok(json)
         }
         fn ser_to_string(&self) -> Result<String, io::Error> {
