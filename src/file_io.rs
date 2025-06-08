@@ -14,10 +14,10 @@ macro_rules! impl_serde_str_json {
         $(
             impl $crate::SerdeStr for $t {
                 fn de_from_str(string: &str) -> Result<Self, std::io::Error> {
-                    Ok(serde_json::from_str(string)?)
+                    serde_json::from_str(string)
                 }
                 fn ser_to_string(&self) -> Result<String, std::io::Error> {
-                    Ok(serde_json::to_string(self)?)
+                    serde_json::to_string(self)
                 }
             }
         )*
